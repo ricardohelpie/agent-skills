@@ -1,6 +1,6 @@
 ---
 name: suggest-skills
-description: Analisa o projeto/tarefa atual e sugere skills instaladas em ~/.claude/skills que podem ser úteis, perguntando ao usuário se deseja ativar alguma delas.
+description: "Analisa o projeto e a tarefa atuais (diretório, stack, pedido da sessão) e sugere quais skills instaladas em ~/.claude/skills podem ajudar, perguntando ao Ricardo antes de ativar qualquer uma. Usar quando ele pergunta 'que skill uso para isso?', 'tem alguma skill para…' ou no início de um projeto novo. Não instala nada: para descobrir e instalar skills novas da internet, usar find-skills; para orquestrar várias skills de design numa tarefa, usar my-design-work."
 ---
 
 # Suggest Skills

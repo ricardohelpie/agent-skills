@@ -119,23 +119,7 @@ Sobrescreve todo o `_elementor_page_settings` incluindo CSS personalizado do usu
 
 ## Vault Consultation — Aprendizados
 
-**Ao iniciar qualquer tarefa**, antes de qualquer chamada MCP:
-
-1. **Extrair 2–3 termos-chave** da tarefa (ex: `carousel`, `tipografia`, `global-classes`, `variables`, `background`, `nested-tabs`)
-2. **Buscar por filename** — rápido, cobre a maioria dos casos:
-   ```bash
-   find /Users/ricardooliveira/Documents/Obsidian-ProductDesigner/Expertise/vibe-wp -name "*<termo>*"
-   ```
-3. **Se não encontrar por filename**, buscar por conteúdo:
-   ```bash
-   grep -rl "<termo>" /Users/ricardooliveira/Documents/Obsidian-ProductDesigner/Expertise/vibe-wp/
-   ```
-4. **Ler só as notas que bateram** — máximo 3 notas, máximo 20 linhas cada:
-   ```bash
-   head -20 <path>
-   ```
-5. **Incorporar ao plano** antes de agir — se a nota indicar gotcha ou limitação, ajustar a abordagem antes de chamar qualquer MCP
-6. Se nenhuma nota bater → prosseguir sem consulta
+**Ao iniciar qualquer tarefa**, antes de qualquer chamada MCP, seguir a consulta ao vault descrita em `~/.claude/skills/my-design-work/SKILL.md` (seção "Consulta ao vault"), com os termos-chave da tarefa (ex: `carousel`, `tipografia`, `global-classes`, `variables`, `background`, `nested-tabs`) — escopo prioritário `Expertise/vibe-wp/`, mas cruzando `Patterns/`, `Ferramentas/` e `Inspiration/` quando o pedido também envolver estilo/direção visual. Incorporar ao plano antes de agir: se a nota indicar gotcha ou limitação, ajustar a abordagem antes de chamar qualquer MCP.
 
 **Regras de token:**
 - Nunca ler mais de 3 notas por consulta
@@ -236,7 +220,7 @@ Nota: `c4bd555` = Title-2 no nm-brasil.com.br. Em outros sites, ler o heading de
 
 ### 3. Container Section Protocol
 
-`add-container` cria com valores padrão do Elementor: `flex_gap` 20px, padding 0, background transparente.
+`add-container` cria com valores padrão do Elementor: `flex_gap` 20px, padding 0, background transparente. O `flex_align_items` também vem com um valor padrão do Elementor (não é sempre o mesmo em todo contexto) — a regra não é "sempre sobrescrever para evitar center", é **verificar o alinhamento resultante contra o que a estrutura daquele container específico exige** e só ajustar se o resultado estiver errado. Se os filhos já renderizam à esquerda/na posição certa sem nenhum `flex_align_items` definido, não é necessário setar nada.
 
 **Sequência obrigatória após add-container:**
 
@@ -256,6 +240,9 @@ Settings típicos para seções NMB (referência: PT calendário post_id 13512):
   "flex_gap": { "column": "56", "row": "56", "isLinked": true, "unit": "px", "size": 56 }
 }
 ```
+(Setar `flex_align_items` aqui só se a inspeção do container de referência mostrar um valor específico — não incluir por padrão.)
+
+**Todo container aninhado no mesmo componente merece essa mesma verificação individualmente** — checar só o container externo (o que tem o bug visível) e presumir que os internos estão certos é o erro mais comum aqui.
 
 **`padding_mobile` é suportado via MCP** — aplicar junto com o desktop no mesmo `update-element`.
 
@@ -266,10 +253,18 @@ Settings típicos para seções NMB (referência: PT calendário post_id 13512):
 Após qualquer criação estrutural, verificar antes de declarar completo:
 
 ```
-get-element-settings(post_id, novo_elemento_id) → confirmar que __globals__, flex_gap e padding foram aplicados
+get-element-settings(post_id, novo_elemento_id) → confirmar que __globals__, flex_gap, padding e flex_align_items foram aplicados
 ```
 
-Se flex_gap ainda for 20px, padding for 0 ou __globals__ ausente → reaplicar. Nunca reportar sucesso sem verificação.
+Se flex_gap ainda for 20px, padding for 0, flex_align_items for "center" (quando não é o desejado) ou __globals__ ausente → reaplicar. Nunca reportar sucesso sem verificação.
+
+**⚠️ Armadilha confirmada (Biobank, 2026-07):** setar um campo de cor com hex literal (`"title_color": "#FFFFFF"`) enquanto `__globals__` para esse mesmo campo fica vazio (`""`) ou nunca é tocado produz uma cor **visualmente idêntica** a um global existente, mas o editor mostra "Personalizado" (custom), não o nome do global. Efeito prático: se o global mudar depois, esse campo específico NÃO acompanha — quebra silenciosamente o design system. Isso não é uma limitação da API — é um erro de execução fácil de cometer porque `{"campo": "#HEX", "__globals__": {"campo": ""}}` parece inofensivo mas na prática desconecta o campo do token.
+
+Regra: sempre que o valor pretendido para um campo de cor bate com um token já existente no kit (`white`, `text`, `primary`, etc.), setar `__globals__.{campo}` para a referência real (`"globals/colors?id=white"`) — nunca deixar `""` nem omitir. Só usar hex literal sem `__globals__` quando for **genuinamente** um valor único sem token correspondente (ex: uma opacidade específica tipo `rgba(255,255,255,0.9)` que não existe como token flat).
+
+Verificação: depois de qualquer `update-widget`/`update-element`/`batch-update` envolvendo cor, reler via `get-element-settings` e confirmar que `__globals__.{campo}` não está vazio quando deveria referenciar um token.
+
+**Onde as refs órfãs realmente se escondem (confirmado, Biobank):** não é em arrays aninhados (`icon_list` etc — essas resolveram normalmente) — é em **containers-wrapper intermediários sem conteúdo próprio** (sem heading/texto/imagem visível) que ficam entre um container de seção e seus widgets. Ao estilizar uma seção, é fácil auditar o container de topo e os widgets de folha e pular os wrappers do meio — mas esses wrappers frequentemente carregam seu próprio `background_image`/`__globals__.background_color` herdado do template copiado, competindo com (ou escondendo atrás) o estilo já aplicado no container pai. `find-element` com `search_text`/`setting_value` funciona bem para achar essas refs — o problema não é a busca, é esquecer de chamar `get-page-structure` e conferir CADA nível da árvore, não só containers de seção + widgets de folha.
 
 ---
 
@@ -278,6 +273,7 @@ Se flex_gap ainda for 20px, padding for 0 ou __globals__ ausente → reaplicar. 
 | Elemento | Propriedade obrigatória | Risco se ignorado |
 |---|---|---|
 | Heading | `__globals__.typography_typography` | Fonte padrão Elementor, não o design system |
+| Container (qualquer, inclusive aninhado) | `flex_align_items` | Verificar se bate com a estrutura pretendida daquele container — se já renderiza certo sem valor setado, não precisa alterar; se não bate, filhos (heading, imagem) podem encolher/centralizar em vez de ocupar a largura esperada |
 | Container de seção | `flex_gap` | Gap padrão 20px vs 56px — densidade visual errada |
 | Container de seção | `padding` desktop | Seção sem respiro visual |
 | Container de seção | `padding_mobile` | Mobile sem margem lateral |
@@ -436,6 +432,15 @@ Group 3 — Text color overrides (refs variable via CSS var string):
 - Hover state: second variant with `"meta": {"breakpoint": "desktop", "state": "hover"}`
 
 ---
+
+## Nav Menus — `menu-read` / `menu-write`
+
+Confirmado funcional (Biobank, 2026-07): o emcp-tools expõe CRUD completo de menus, sem precisar de curl/REST manual.
+
+- `menu-read` (sem `operation` retorna o catálogo): `list-menus`, `get-menu`, `list-locations`, `render`
+- `menu-write` (sem `operation` retorna o catálogo): `create-menu`, `rename-menu`, `delete-menu`, `assign-location`, `unassign-location`, `add-item`, `update-item`, `delete-item`, `reorder-items`
+
+Para singlepage (âncoras em vez de páginas reais): `add-item` com `type: "custom"`, `url: "#id-da-secao"` (o `_element_id` setado no container da seção via `update-container`/`update-element` vira o alvo do link).
 
 ## Chrome MCP Requirement
 

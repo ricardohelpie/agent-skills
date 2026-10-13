@@ -1,3 +1,8 @@
+---
+name: carousel-update
+description: "Fluxo seguro para adicionar, remover, reordenar ou editar slides de um widget de carrossel Elementor via elementor-mcp: verifica Application Passwords e conexão antes de escrever, lê o widget, mantém `elements[]` e `carousel_items[]` sincronizados (mesmo tamanho) e confere contagem e títulos depois da gravação. Usar sempre que a mudança for nos slides de um carrossel Elementor. Não usar para outras edições de página ou widget (wordpress-elementor / wp-update) nem com REST `_elementor_data`."
+---
+
 # Carousel Update
 
 Safe, verified workflow for updating Elementor carousels via MCP. Prevents the carousel_items[] / elements[] desync bug and ensures credentials are valid before any write.

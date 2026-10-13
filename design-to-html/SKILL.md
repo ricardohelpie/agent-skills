@@ -1,3 +1,8 @@
+---
+name: design-to-html
+description: "Converte um frame ou componente do Figma (via Figma MCP) em página HTML de produção com CSS inline e animações de scroll por IntersectionObserver, nos temas do design system (bfshow, cosmetique, pharma, petsa, petvet); extrai tokens sem improvisar valores, confirma o tipo de animação por seção, verifica visualmente no Chrome MCP e salva as decisões no Obsidian. Usar quando o Ricardo diz 'implementa este frame do Figma', 'converte para HTML', 'monta esta página a partir do Figma'. Não usar para código React/componentes de app (figma-implement-design) nem para levar código para o Figma (figma-generate-design)."
+---
+
 # design-to-html
 
 Converts a Figma frame or component into a production-ready HTML page with scroll animations, then verifies visually via Chrome MCP and saves decisions to Obsidian.
